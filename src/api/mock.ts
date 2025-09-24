@@ -69,6 +69,11 @@ export const mockApi = {
   listCompanies: async (): Promise<Company[]> => read<Company[]>(LS_KEYS.companies, []),
   createCompany: async (payload: Omit<Company, 'id' | 'createdAt'>): Promise<Company> => {
     const list = read<Company[]>(LS_KEYS.companies, [])
+  //  benzersiz kontrolü (case-insensitive)
+  const newNum = payload.legalNumber.trim().toLowerCase()
+  const exists = list.some(c => c.legalNumber.trim().toLowerCase() === newNum)
+  if (exists) throw new Error('Company legal number must be unique')
+
     const created: Company = { id: uid(), createdAt: nowISO(), ...payload }
     list.unshift(created)
     write(LS_KEYS.companies, list)
@@ -78,6 +83,13 @@ export const mockApi = {
     const list = read<Company[]>(LS_KEYS.companies, [])
     const idx = list.findIndex(c => c.id === id)
     if (idx === -1) throw new Error('Company not found')
+  // benzersiz kontrolü (sadece legalNumber değiştiriliyorsa)
+  if (patch.legalNumber) {
+    const nextNum = patch.legalNumber.trim().toLowerCase()
+    const clash = list.some(c => c.id !== id && c.legalNumber.trim().toLowerCase() === nextNum)
+    if (clash) throw new Error('Company legal number must be unique')
+  }
+
     list[idx] = { ...list[idx], ...patch }
     write(LS_KEYS.companies, list)
     return list[idx]

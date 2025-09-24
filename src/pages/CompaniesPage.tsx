@@ -119,9 +119,28 @@ const CompaniesPage: React.FC = () => {
           <Form.Item name="name" label="Company Name" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="legalNumber" label="Company Legal Number" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
+          <Form.Item
+                name="legalNumber"
+                label="Company Legal Number"
+                rules={[
+                { required: true },
+                {
+                validator: (_, value) => {
+                        const v = (value ?? '').trim().toLowerCase()
+                        if (!v) return Promise.resolve()
+                        const exists = data.some(c =>
+                        c.legalNumber.trim().toLowerCase() === v && (!editing || c.id !== editing.id)
+                        )
+                        return exists
+                        ? Promise.reject(new Error('This legal number is already in use.'))
+                        : Promise.resolve()
+                }
+                }
+                ]}
+                >
+                <Input />
+                </Form.Item>
+
           <Form.Item name="country" label="Incorporation Country" rules={[{ required: true }]}>
             <Select options={countryOptions} showSearch />
           </Form.Item>
